@@ -24,39 +24,26 @@ public class UserController {
     }
     @GetMapping("/get")
     public List<User> getUsers() {
-        return userService.findAll();
+        return userService.findUsers();
+    }
+    @GetMapping("/get/{id}")
+    public Optional<User> getUser(@PathVariable String id) {
+        return userService.findUserById(id);
     }
     @PostMapping("/add")
-    public List<User> addUser(@RequestBody User user) {
-        userService.insert(user);
-        return userService.findAll();
+    public User addUser(@RequestBody User user) {
+        return userService.addUser(user);
     }
     @PutMapping("/edit/{id}")
     public User editUser(@RequestBody User user,@PathVariable String id) {
         try{
-            Optional<User> foundUser = userService.findById(id);
-            if (foundUser.isPresent()) {
-                userService.save(user);
-                return user;
-            }else{
-                return null;
-            }
+            return userService.updateUser(id,user);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
     @DeleteMapping("/delete/{id}")
     public String deleteUser(@PathVariable String id) {
-        try{
-            Optional<User> foundUser = userService.findById(id);
-            if (foundUser.isPresent()) {
-                userService.delete(foundUser.get());
-                return "user deleted";
-            }else{
-                return "user not found";
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return userService.deleteUser(id);
     }
 }

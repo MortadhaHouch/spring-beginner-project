@@ -1,130 +1,117 @@
 package com.example.demo.services;
-
 import com.example.demo.models.*;
 import com.example.demo.repositories.PostRepo;
-import org.springframework.data.domain.Example;
+import com.example.demo.repositories.UserRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.FluentQuery;
+import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
+@Service
+public class PostService{
 
-public class PostService implements PostRepo {
-    @Override5
-    public <S extends Post> S insert(S entity) {
-        return null;
+    @Autowired
+    PostRepo postRepo;
+    @Autowired
+    private UserRepo userRepo;
+
+    public List<Post> findPosts(){
+        return postRepo.findAll();
     }
-
-    @Override
-    public <S extends Post> List<S> insert(Iterable<S> entities) {
-        return List.of();
+    public List<Post> findPostsByAmount(String id,int amount){
+        try{
+            Optional<User> foundUser = userRepo.findById(id);
+            if (foundUser.isPresent()){
+                return postRepo.findAll().stream().skip(amount * 10L).limit(amount).toList();
+            }else{
+                return new ArrayList<>();
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
     }
-
-    @Override
-    public <S extends Post> Optional<S> findOne(Example<S> example) {
-        return Optional.empty();
+    public List<Post> findPostsSortedByDate(String id){
+        try{
+            Optional<User> foundUser = userRepo.findById(id);
+            ArrayList<Post> posts = new ArrayList<>();
+            if (foundUser.isPresent()){
+                foundUser.get().getPosts().stream().sorted((p1,p2)->{
+                    Optional<Post> foundPost1 = postRepo.findById(p1);
+                    Optional<Post> foundPost2 = postRepo.findById(p2);
+                    if(foundPost1.isPresent() && foundPost2.isPresent()){
+                        return foundPost1.get().getAddedOn().compareTo(foundPost2.get().getAddedOn());
+                    }else{
+                        return Integer.parseInt(null);
+                    }
+                }).forEach(p->{
+                    Optional<Post> foundPost = postRepo.findById(p);
+                    foundPost.ifPresent(posts::add);
+                });
+                return posts;
+            }else{
+                return new ArrayList<>();
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
     }
-
-    @Override
-    public <S extends Post> List<S> findAll(Example<S> example) {
-        return List.of();
+    public List<Post> findPostsByAmountSortedByDate(String id,int n){
+        try{
+            Optional<User> foundUser = userRepo.findById(id);
+            ArrayList<Post> posts = new ArrayList<>();
+            if (foundUser.isPresent()){
+                foundUser.get().getPosts().stream().skip(n * 10L).limit(n).sorted((p1,p2)->{
+                    Optional<Post> foundPost1 = postRepo.findById(p1);
+                    Optional<Post> foundPost2 = postRepo.findById(p2);
+                    if(foundPost1.isPresent() && foundPost2.isPresent()){
+                        return foundPost1.get().getAddedOn().compareTo(foundPost2.get().getAddedOn());
+                    }else{
+                        return Integer.parseInt(null);
+                    }
+                }).forEach(p->{
+                    Optional<Post> foundPost = postRepo.findById(p);
+                    foundPost.ifPresent(posts::add);
+                });
+                return posts;
+            }else{
+                return new ArrayList<>();
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
     }
-
-    @Override
-    public <S extends Post> List<S> findAll(Example<S> example, Sort sort) {
-        return List.of();
+    public Optional<Post> findPostById(String id){
+        return postRepo.findById(id);
     }
-
-    @Override
-    public <S extends Post> Page<S> findAll(Example<S> example, Pageable pageable) {
-        return null;
+    public Post updatePost(Post post){
+        return postRepo.save(post);
     }
-
-    @Override
-    public <S extends Post> long count(Example<S> example) {
-        return 0;
+    public String deletePost(String id){
+        postRepo.deleteById(id);
+        return "Post deleted";
     }
-
-    @Override
-    public <S extends Post> boolean exists(Example<S> example) {
-        return false;
+    public String addPost(Post post){
+        postRepo.insert(post);
+        return "Post saved";
     }
-
-    @Override
-    public <S extends Post, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
-        return null;
+    public User getUserByPost(String id){
+        try{
+            Optional<User> foundUser = userRepo.findById(id);
+            return foundUser.orElse(null);
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
     }
-
-    @Override
-    public <S extends Post> S save(S entity) {
-        return null;
-    }
-
-    @Override
-    public <S extends Post> List<S> saveAll(Iterable<S> entities) {
-        return List.of();
-    }
-
-    @Override
-    public Optional<Post> findById(String s) {
-        return Optional.empty();
-    }
-
-    @Override
-    public boolean existsById(String s) {
-        return false;
-    }
-
-    @Override
-    public List<Post> findAll() {
-        return List.of();
-    }
-
-    @Override
-    public List<Post> findAllById(Iterable<String> strings) {
-        return List.of();
-    }
-
-    @Override
-    public long count() {
-        return 0;
-    }
-
-    @Override
-    public void deleteById(String s) {
-
-    }
-
-    @Override
-    public void delete(Post entity) {
-
-    }
-
-    @Override
-    public void deleteAllById(Iterable<? extends String> strings) {
-
-    }
-
-    @Override
-    public void deleteAll(Iterable<? extends Post> entities) {
-
-    }
-
-    @Override
-    public void deleteAll() {
-
-    }
-
-    @Override
-    public List<Post> findAll(Sort sort) {
-        return List.of();
-    }
-
-    @Override
-    public Page<Post> findAll(Pageable pageable) {
-        return null;
+    public ArrayList<User> getUsersByPost(List<String> posts){
+        ArrayList<User> users = new ArrayList<>();
+        posts.forEach(post -> {
+            Optional<User> foundUser = userRepo.findById(post);
+            foundUser.ifPresent(users::add);
+        });
+        return users;
     }
 }
